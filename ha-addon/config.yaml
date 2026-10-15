@@ -3,14 +3,20 @@ name: Vacuula
 version: "latest"
 slug: vacuula
 description: custom server for the undead robot vacuum cleaners - revive your Neato with the power of Vacuula
-url: "https://github.com/vacuula/vacuula"
+url: "https://github.com/MarbleJames/vacuula"
 arch:
   - aarch64
   - amd64
 init: false
 host_network: true
 boot: auto
-image: "ghcr.io/vacuula/vacuula"
+ingress: true
+ingress_port: 80
+ingress_entry: /web/
+ingress_stream: true
+panel_icon: mdi:robot-vacuum
+panel_title: Vacuula
+image: "ghcr.io/marblejames/vacuula"
 
 map:
   - type: addon_config

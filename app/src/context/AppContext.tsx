@@ -1,6 +1,6 @@
 import { createContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Http, type LoadingState, type ServerInfo } from '../http'
+import { apiBase, Http, type LoadingState, type ServerInfo } from '../http'
 import { GEN3_COMMANDS } from '../http/gen3'
 import type { UseState } from '../pages/map/types'
 import { Neato, RobotType, type QuickRobotInfo, type Robot } from '../types'
@@ -161,7 +161,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             if (firstOnline) connectToRobot(res.data, firstOnline[0], firstOnline[1].type, firstOnline[1].name)
         });
 
-        const events = new EventSource('/api/events')
+        const events = new EventSource(`${apiBase()}/events`)
         events.addEventListener('robots', (event) => {
             const data = JSON.parse(event.data) as QuickRobotInfo
             setRobots(data)
@@ -181,7 +181,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!robot) return;
 
         const events = new EventSource(
-            `/api/robot/${robot.serial}/connect`,
+            `${apiBase()}/robot/${robot.serial}/connect`,
         );
 
         events.onopen = () => {

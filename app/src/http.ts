@@ -20,8 +20,16 @@ export interface ServerInfo {
 // Store for loading state callback - will be set by AppContext
 // let loadingStateCallback: ((state: { isLoading: boolean; message?: string }) => void) | null = null;
 
+/** Prefix for /api, empty on a direct visit and the ingress token path inside Home Assistant. */
+export function apiBase(): string {
+  const path = location.pathname.replace(/\/$/, "");
+  const webAt = path.lastIndexOf("/web");
+  const prefix = webAt >= 0 ? path.slice(0, webAt) : "";
+  return `${prefix}/api`;
+}
+
 const instance = axios.create({
-  baseURL: `${location.origin}/api`, 
+  baseURL: apiBase(),
 });
 
 export type LoadingState = { isLoading: boolean; message?: string };

@@ -119,9 +119,23 @@ class RouterHandler(BaseHTTPRequestHandler):
         self.wfile.flush()
 
 
+    def _web_location(self) -> str:
+        prefix = self.headers.get("X-Ingress-Path", "").rstrip("/")
+        return f"{prefix}/web/"
+
+    def _redirect(self, location: str):
+        self.send_response(301)
+        self.send_header("Location", location)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     # Routing logic
     def route(self):
-        if self.path == "/web" or self.path.startswith("/web/") or self.path == "/favicon.ico":
+        path_only = self.path.split("?", 1)[0]
+        if path_only in ("/", "/web") and self.command == "GET":
+            self._redirect(self._web_location())
+            return
+        if path_only.startswith("/web/") or path_only == "/favicon.ico":
             return self.serve_web()
         accept = self.headers.get("Accept", "")
         
@@ -131,11 +145,6 @@ class RouterHandler(BaseHTTPRequestHandler):
             return BrainslugHandler(BEEHIVE_ROUTES, self)
         elif accept == "application/vnd.neato.cometa.v1":
             return BrainslugHandler(NUCLEO_ROUTES, self)
-        elif self.path == "/" and self.command == "GET":
-            self.send_response(301)
-            self.send_header("Location", "/web")
-            self.send_header("Content-Length", "0")
-            self.end_headers()
         else:
             return BrainslugHandler(S3_ROUTES, self)
 
