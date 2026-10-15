@@ -50,9 +50,39 @@ class RouterHandler(BaseHTTPRequestHandler):
         except ValueError:
             self.send_bad_request("Invalid Content-Length header")
             return None
-        if content_length == 0:
-            return b""
-        return self.rfile.read(content_length)
+        # Home Assistant ingress strips Content-Length and forwards POST bodies
+        # with Transfer-Encoding: chunked. An empty read here becomes a 400,
+        # which leaves the web page with no robot state.
+        if content_length > 0:
+            return self.rfile.read(content_length)
+        if "chunked" in self.headers.get("Transfer-Encoding", "").lower():
+            return self._read_chunked()
+        return b""
+
+    def _read_chunked(self):
+        chunks = []
+        while True:
+            line = self.rfile.readline()
+            if not line:
+                self.send_bad_request("Truncated chunked body")
+                return None
+            try:
+                size = int(line.split(b";", 1)[0], 16)
+            except ValueError:
+                self.send_bad_request("Invalid chunk size")
+                return None
+            if size == 0:
+                while True:
+                    trailer = self.rfile.readline()
+                    if trailer in (b"", b"\r\n", b"\n"):
+                        break
+                return b"".join(chunks)
+            chunk = self.rfile.read(size)
+            if len(chunk) != size:
+                self.send_bad_request("Truncated chunked body")
+                return None
+            chunks.append(chunk)
+            self.rfile.readline()
 
     def read_json(self) -> dict | None:
         data = self.read_data()
