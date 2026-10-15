@@ -29,10 +29,10 @@ jobs:
           version=""
           release=false
 
-          if [[ "$COMMIT_MSG" =~ release:([0-9A-Za-z._-]+) ]]; then
+          if [[ "$COMMIT_MSG" =~ release:[[:space:]]*([0-9A-Za-z._-]+) ]]; then
             version="${BASH_REMATCH[1]}"
             release=true
-          elif [[ "$COMMIT_MSG" =~ dbuild:([0-9A-Za-z._-]+) ]]; then
+          elif [[ "$COMMIT_MSG" =~ dbuild:[[:space:]]*([0-9A-Za-z._-]+) ]]; then
             version="${BASH_REMATCH[1]}"
           fi
 
